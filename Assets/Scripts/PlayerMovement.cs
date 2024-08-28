@@ -51,7 +51,6 @@ public class PlayerMovement : MonoBehaviour
 	private Vector2 _lastDashDir;
 	private bool _isDashAttacking;
 
-    private bool isDashingPaused = false;
     private Vector2 pausedDashDirection;
     private float remainingDashTime;
 
@@ -519,6 +518,8 @@ public class PlayerMovement : MonoBehaviour
 	}
     #endregion
     private CameraShakeTrigger _cameraShakeTrigger;
+	private bool refreshDash;
+    public int maxDashes = 1;
     #region DASH METHODS
     //Dash Coroutine
     private IEnumerator StartDash(Vector2 dir)
@@ -561,10 +562,19 @@ public class PlayerMovement : MonoBehaviour
 
 		//Dash over
 		IsDashing = false;
-	}
+		if (refreshDash) { 
+			_dashesLeft = 1;
+			refreshDash = false;
+        }
 
-	//Short period before the player is able to dash again
-	private IEnumerator RefillDash(int amount)
+    }
+    public void RefillDashes()
+    {
+		//_dashesLeft = maxDashes; // Refill the dashes to the maximum
+		refreshDash = true;
+    }
+    //Short period before the player is able to dash again
+    private IEnumerator RefillDash(int amount)
 	{
 		//SHoet cooldown, so we can't constantly dash along the ground, again this is the implementation in Celeste, feel free to change it up
 		_dashRefilling = true;

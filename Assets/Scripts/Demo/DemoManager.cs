@@ -10,7 +10,6 @@ public class DemoManager : MonoBehaviour
     [SerializeField] private Tilemap[] levels;
     [SerializeField] private Transform spawnPoint;
 
-    private int _currentPlayerTypeIndex = 0;
     private int _currentTilemapIndex;
     private Color _currentForegroundColor;
 
