@@ -29,6 +29,8 @@ public class PlayerRespawn : MonoBehaviour
         // Assuming originalScale is already set to the initial scale of the Sprite Mask
         circleMask.transform.localScale = originalScale;
         blackOverlay.SetActive(false);
+
+        GameManager.LoadGame(playerTransform); 
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -49,6 +51,7 @@ public class PlayerRespawn : MonoBehaviour
                 lastCheckpoint = other.transform;
                 lastCheckpointPosition = lastCheckpoint.position;
             }
+            GameManager.SaveGame(lastCheckpoint.position); 
         }
     }
 
