@@ -13,6 +13,7 @@ public class PlayerMovement : MonoBehaviour
 	public ParticleSystem dashParticleSystem; // Reference to the particle system prefab
 	public ParticleSystem dashBurstParticleSystem; // Reference to the burst particle system
 	private PlayerAnimator animController;
+	private bool refillDash;
 
 
 	#region COMPONENTS
@@ -251,6 +252,7 @@ public class PlayerMovement : MonoBehaviour
 				dashParticleSystem.Stop();
 				StopDashBurstParticles();
 			}
+
 			#endregion
 
 			#region SLIDE CHECKS
@@ -306,6 +308,11 @@ public class PlayerMovement : MonoBehaviour
 			}
 			#endregion
 		}
+	}
+
+	public void RefillDashes()
+	{
+		refillDash = true;
 	}
 
 	private void SpawnDashSilhouette()
@@ -563,6 +570,12 @@ public class PlayerMovement : MonoBehaviour
 
 		//Dash over
 		IsDashing = false;
+		if (refillDash)
+		{
+			refillDash = false;
+			_dashesLeft = 1;
+
+        }
 	}
 
 	//Short period before the player is able to dash again
