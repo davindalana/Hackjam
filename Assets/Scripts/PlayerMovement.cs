@@ -101,6 +101,11 @@ public class PlayerMovement : MonoBehaviour
 	{
 		if (!PauseMenu.isPaused)
 		{
+			if(!IsDashing && refillDash)
+			{
+                refillDash = false;
+                _dashesLeft = 1;
+            }
 			#region TIMERS
 			LastOnGroundTime -= Time.deltaTime;
 			LastOnWallTime -= Time.deltaTime;
@@ -581,8 +586,8 @@ public class PlayerMovement : MonoBehaviour
 	//Short period before the player is able to dash again
 	private IEnumerator RefillDash(int amount)
 	{
-		//SHoet cooldown, so we can't constantly dash along the ground, again this is the implementation in Celeste, feel free to change it up
-		_dashRefilling = true;
+        //SHoet cooldown, so we can't constantly dash along the ground, again this is the implementation in Celeste, feel free to change it up
+        _dashRefilling = true;
 		yield return new WaitForSeconds(Data.dashRefillTime);
 		_dashRefilling = false;
 		_dashesLeft = Mathf.Min(Data.dashAmount, _dashesLeft + 1);
