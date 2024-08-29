@@ -16,6 +16,7 @@ public class FallingBlock : MonoBehaviour
     private Vector3 originalPosition; // The original position of the block
     private Rigidbody2D rb;
     private bool isFalling = false;
+    public CircleCollider2D specificCollider;
 
     void Start()
     {
@@ -34,13 +35,17 @@ public class FallingBlock : MonoBehaviour
         // Check if the player collided with the block
         if (other.CompareTag("Player") && !isFalling)
         {
-            // Start the shake and fall sequence
-            StartCoroutine(ShakeAndFall());
+            if (specificCollider != null && other.IsTouching(specificCollider))
+            {
+                // Start the shake and fall sequence
+                StartCoroutine(ShakeAndFall());
+            }
         }
     }
 
     private IEnumerator ShakeAndFall()
     {
+        specificCollider.enabled = false;
         isFalling = true;
 
         // Start the shake effect
@@ -93,5 +98,6 @@ public class FallingBlock : MonoBehaviour
         rb.velocity = Vector2.zero; // Stop any ongoing movement
         transform.position = originalPosition;
         isFalling = false;
+        specificCollider.enabled = true;
     }
 }

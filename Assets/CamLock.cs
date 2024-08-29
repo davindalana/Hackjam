@@ -9,14 +9,15 @@ public class CamLock : MonoBehaviour
     public float rightBound = 5f;  // Right boundary limit
     public float topBound = 3f;  // Top boundary limit
     public float bottomBound = -3f;  // Bottom boundary limit
-
+    public float Xoffset;
+    public float Yoffset;
     public Transform player;  // Reference to the player transform
 
     void Update()
     {
         // Follow the player's position
-        float targetXPosition = player.position.x;
-        float targetYPosition = player.position.y-2;
+        float targetXPosition = player.position.x+Xoffset;
+        float targetYPosition = player.position.y+Yoffset;
 
         // Clamp the target X position between the left and right bounds
         targetXPosition = Mathf.Clamp(targetXPosition, leftBound, rightBound);
