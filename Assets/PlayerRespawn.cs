@@ -7,9 +7,11 @@ public class PlayerRespawn : MonoBehaviour
 {
     public SpriteMask circleMask; // Reference to the Sprite Mask
     public GameObject deathParticlePrefab; // Reference to the death particle prefab
+    public GameObject respawnParticlePrefab;
+    public SpriteRenderer PlayerSprite;
     public Transform playerTransform; // Reference to the player transform
     public Camera mainCamera; // Reference to the main camera
-    public float zoomDuration = 1.0f; // Duration of the zoom effect
+    public float zoomDuration = 0.5f; // Duration of the zoom effect
     public Vector3 zoomScale = new Vector3(0.1f, 0.1f, 1f); // Final scale for zoom in (small circle)
     public Vector3 originalScale = new Vector3(400f, 400f, 1f); // Starting scale of the Sprite Mask
     public GameObject blackOverlay;
@@ -88,16 +90,21 @@ public class PlayerRespawn : MonoBehaviour
         yield return StartCoroutine(CircularZoomIn());
 
         // 7. Respawn the player at the last checkpoint
-        RespawnPlayer();
+        PlayerSprite.enabled = false;
 
         // 8. Black screen zoom out effect
         yield return StartCoroutine(CircularZoomOut());
+        RespawnPlayer();
+        GameObject respParticles = Instantiate(respawnParticlePrefab, playerTransform.position + new Vector3(0, -0.5f, 0), Quaternion.identity);
+        yield return new WaitForSeconds(1f);
+        PlayerSprite.enabled = true;
 
         // 9. Re-enable player movement and input
         playerMovement.enabled = true;
 
         // Destroy the death particles after they have finished playing
         Destroy(deathParticles, 2.0f); // Adjust the time as needed based on the particle system duration
+        Destroy(respParticles, 2.0f);
         isDead = false;
         playerRigidbody.constraints = RigidbodyConstraints2D.None;
         playerRigidbody.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -128,10 +135,10 @@ public class PlayerRespawn : MonoBehaviour
     private IEnumerator CircularZoomOut()
     {
         float elapsedTime = 0f;
-        while (elapsedTime < zoomDuration)
+        while (elapsedTime < zoomDuration/2)
         {
             elapsedTime += Time.deltaTime;
-            float t = elapsedTime / zoomDuration;
+            float t = elapsedTime / (zoomDuration/2);
             circleMask.transform.localScale = Vector3.Lerp(zoomScale, originalScale, t);
             yield return null;
         }
