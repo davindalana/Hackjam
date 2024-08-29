@@ -55999,7 +55999,6 @@ GameObject:
   - component: {fileID: 2107377070}
   - component: {fileID: 2107377071}
   - component: {fileID: 2107377072}
-  - component: {fileID: 2107377073}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -56176,18 +56175,6 @@ MonoBehaviour:
   playerAnimator: {fileID: 1624312724}
   cameraShakeTrigger: {fileID: 2107377071}
   lastCheckpoint: {fileID: 0}
---- !u!114 &2107377073
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2107377065}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 236922191ef7edd44a7d4141bfe9de0f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &2121728566
 PrefabInstance:
   m_ObjectHideFlags: 0
