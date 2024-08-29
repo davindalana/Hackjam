@@ -32,7 +32,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.2d.common": {
-      "version": "8.0.2",
+      "version": "8.0.3",
       "depth": 1,
       "source": "registry",
       "dependencies": {
@@ -80,7 +80,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.burst": {
-      "version": "1.8.15",
+      "version": "1.8.17",
       "depth": 2,
       "source": "registry",
       "dependencies": {
