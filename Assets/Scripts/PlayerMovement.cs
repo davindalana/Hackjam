@@ -7,16 +7,16 @@ public class PlayerMovement : MonoBehaviour
 	//Scriptable object which holds all the player's movement parameters. If you don't want to use it
 	//just paste in all the parameters, though you will need to manuly change all references in this script
 	public PlayerData Data;
-    public GameObject dashSilhouettePrefab;
-    public float timeBetweenSilhouettes = 0.05f; // Time between each silhouette spawn
-    private float lastSilhouetteTime;
-    public ParticleSystem dashParticleSystem; // Reference to the particle system prefab
-    public ParticleSystem dashBurstParticleSystem; // Reference to the burst particle system
-    private PlayerAnimator animController;
+	public GameObject dashSilhouettePrefab;
+	public float timeBetweenSilhouettes = 0.05f; // Time between each silhouette spawn
+	private float lastSilhouetteTime;
+	public ParticleSystem dashParticleSystem; // Reference to the particle system prefab
+	public ParticleSystem dashBurstParticleSystem; // Reference to the burst particle system
+	private PlayerAnimator animController;
 
 
-    #region COMPONENTS
-    public Rigidbody2D RB { get; private set; }
+	#region COMPONENTS
+	public Rigidbody2D RB { get; private set; }
 	//Script to handle all player animations, all references can be safely removed if you're importing into your own project.
 	public PlayerAnimator AnimHandler { get; private set; }
 	#endregion
@@ -51,15 +51,15 @@ public class PlayerMovement : MonoBehaviour
 	private Vector2 _lastDashDir;
 	private bool _isDashAttacking;
 
-    private bool isDashingPaused = false;
-    private Vector2 pausedDashDirection;
-    private float remainingDashTime;
+	private bool isDashingPaused = false;
+	private Vector2 pausedDashDirection;
+	private float remainingDashTime;
 
 
-    #endregion
+	#endregion
 
-    #region INPUT PARAMETERS
-    private Vector2 _moveInput;
+	#region INPUT PARAMETERS
+	private Vector2 _moveInput;
 
 	public float LastPressedJumpTime { get; private set; }
 	public float LastPressedDashTime { get; private set; }
@@ -67,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
 
 	#region CHECK PARAMETERS
 	//Set all of these up in the inspector
-	[Header("Checks")] 
+	[Header("Checks")]
 	[SerializeField] private Transform _groundCheckPoint;
 	//Size of groundCheck depends on the size of your character generally you want them slightly small than width (for ground) and height (for the wall check)
 	[SerializeField] private Vector2 _groundCheckSize = new Vector2(0.49f, 0.03f);
@@ -75,22 +75,22 @@ public class PlayerMovement : MonoBehaviour
 	[SerializeField] private Transform _frontWallCheckPoint;
 	[SerializeField] private Transform _backWallCheckPoint;
 	[SerializeField] private Vector2 _wallCheckSize = new Vector2(0.5f, 0.5f);
-    #endregion
+	#endregion
 
-    #region LAYERS & TAGS
-    [Header("Layers & Tags")]
+	#region LAYERS & TAGS
+	[Header("Layers & Tags")]
 	[SerializeField] private LayerMask _groundLayer;
 	#endregion
 
-    private void Awake()
+	private void Awake()
 	{
 		RB = GetComponent<Rigidbody2D>();
 		AnimHandler = GetComponent<PlayerAnimator>();
-        animController = GetComponent<PlayerAnimator>();
+		animController = GetComponent<PlayerAnimator>();
 
-    }
+	}
 
-    private void Start()
+	private void Start()
 	{
 		SetGravityScale(Data.gravityScale);
 		IsFacingRight = true;
@@ -98,257 +98,259 @@ public class PlayerMovement : MonoBehaviour
 
 	private void Update()
 	{
-        
-        #region TIMERS
-        LastOnGroundTime -= Time.deltaTime;
-		LastOnWallTime -= Time.deltaTime;
-		LastOnWallRightTime -= Time.deltaTime;
-		LastOnWallLeftTime -= Time.deltaTime;
-
-		LastPressedJumpTime -= Time.deltaTime;
-		LastPressedDashTime -= Time.deltaTime;
-		#endregion
-
-		#region INPUT HANDLER
-		_moveInput.x = Input.GetAxisRaw("Horizontal");
-		_moveInput.y = Input.GetAxisRaw("Vertical");
-
-		if (_moveInput.x != 0)
-			CheckDirectionToFace(_moveInput.x > 0);
-
-		if(Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.J))
-        {
-			OnJumpInput();
-        }
-
-		if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.C) || Input.GetKeyUp(KeyCode.J))
+		if (!PauseMenu.isPaused)
 		{
-			OnJumpUpInput();
-		}
+			#region TIMERS
+			LastOnGroundTime -= Time.deltaTime;
+			LastOnWallTime -= Time.deltaTime;
+			LastOnWallRightTime -= Time.deltaTime;
+			LastOnWallLeftTime -= Time.deltaTime;
 
-		if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.K))
-		{
-			OnDashInput();
-		}
-		#endregion
+			LastPressedJumpTime -= Time.deltaTime;
+			LastPressedDashTime -= Time.deltaTime;
+			#endregion
 
-		#region COLLISION CHECKS
-		if (!IsDashing && !IsJumping)
-		{
-			//Ground Check
-			if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer)) //checks if set box overlaps with ground
+			#region INPUT HANDLER
+			_moveInput.x = Input.GetAxisRaw("Horizontal");
+			_moveInput.y = Input.GetAxisRaw("Vertical");
+
+			if (_moveInput.x != 0)
+				CheckDirectionToFace(_moveInput.x > 0);
+
+			if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.J))
 			{
-				if(LastOnGroundTime < -0.1f)
-                {
-					AnimHandler.justLanded = true;
-                }
+				OnJumpInput();
+			}
 
-				LastOnGroundTime = Data.coyoteTime; //if so sets the lastGrounded to coyoteTime
-            }		
-
-			//Right Wall Check
-			if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)
-					|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)) && !IsWallJumping)
-				LastOnWallRightTime = Data.coyoteTime;
-
-			//Left Wall Check
-			if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)
-				|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)) && !IsWallJumping)
-				LastOnWallLeftTime = Data.coyoteTime;
-
-			//Two checks needed for both left and right walls since whenever the play turns the wall checkPoints swap sides
-			LastOnWallTime = Mathf.Max(LastOnWallLeftTime, LastOnWallRightTime);
-		}
-        #endregion
-
-        #region JUMP CHECKS
-        animController.SetGrabbing(LastOnWallTime > 0 && LastOnGroundTime <= 0 && LastOnWallLeftTime >0);
-        animController.SetGrabbing1(LastOnWallTime > 0 && LastOnGroundTime <= 0 && LastOnWallRightTime > 0);
-        if (IsJumping && RB.velocity.y < 0)
-		{
-			IsJumping = false;
-
-			_isJumpFalling = true;
-		}
-
-		if (IsWallJumping && Time.time - _wallJumpStartTime > Data.wallJumpTime)
-		{
-			IsWallJumping = false;
-		}
-
-		if (LastOnGroundTime > 0 && !IsJumping && !IsWallJumping)
-        {
-			_isJumpCut = false;
-
-			_isJumpFalling = false;
-		}
-
-		if (!IsDashing)
-		{
-			//Jump
-			if (CanJump() && LastPressedJumpTime > 0)
+			if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.C) || Input.GetKeyUp(KeyCode.J))
 			{
-				IsJumping = true;
+				OnJumpUpInput();
+			}
+
+			if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.K))
+			{
+				OnDashInput();
+			}
+			#endregion
+
+			#region COLLISION CHECKS
+			if (!IsDashing && !IsJumping)
+			{
+				//Ground Check
+				if (Physics2D.OverlapBox(_groundCheckPoint.position, _groundCheckSize, 0, _groundLayer)) //checks if set box overlaps with ground
+				{
+					if (LastOnGroundTime < -0.1f)
+					{
+						AnimHandler.justLanded = true;
+					}
+
+					LastOnGroundTime = Data.coyoteTime; //if so sets the lastGrounded to coyoteTime
+				}
+
+				//Right Wall Check
+				if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)
+						|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)) && !IsWallJumping)
+					LastOnWallRightTime = Data.coyoteTime;
+
+				//Left Wall Check
+				if (((Physics2D.OverlapBox(_frontWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && !IsFacingRight)
+					|| (Physics2D.OverlapBox(_backWallCheckPoint.position, _wallCheckSize, 0, _groundLayer) && IsFacingRight)) && !IsWallJumping)
+					LastOnWallLeftTime = Data.coyoteTime;
+
+				//Two checks needed for both left and right walls since whenever the play turns the wall checkPoints swap sides
+				LastOnWallTime = Mathf.Max(LastOnWallLeftTime, LastOnWallRightTime);
+			}
+			#endregion
+
+			#region JUMP CHECKS
+			animController.SetGrabbing(LastOnWallTime > 0 && LastOnGroundTime <= 0 && LastOnWallLeftTime > 0);
+			animController.SetGrabbing1(LastOnWallTime > 0 && LastOnGroundTime <= 0 && LastOnWallRightTime > 0);
+			if (IsJumping && RB.velocity.y < 0)
+			{
+				IsJumping = false;
+
+				_isJumpFalling = true;
+			}
+
+			if (IsWallJumping && Time.time - _wallJumpStartTime > Data.wallJumpTime)
+			{
+				IsWallJumping = false;
+			}
+
+			if (LastOnGroundTime > 0 && !IsJumping && !IsWallJumping)
+			{
+				_isJumpCut = false;
+
+				_isJumpFalling = false;
+			}
+
+			if (!IsDashing)
+			{
+				//Jump
+				if (CanJump() && LastPressedJumpTime > 0)
+				{
+					IsJumping = true;
+					IsWallJumping = false;
+					_isJumpCut = false;
+					_isJumpFalling = false;
+					Jump();
+
+					AnimHandler.startedJumping = true;
+				}
+				//WALL JUMP
+				else if (CanWallJump() && LastPressedJumpTime > 0)
+				{
+					IsWallJumping = true;
+					IsJumping = false;
+					_isJumpCut = false;
+					_isJumpFalling = false;
+
+					_wallJumpStartTime = Time.time;
+					_lastWallJumpDir = (LastOnWallRightTime > 0) ? -1 : 1;
+
+					WallJump(_lastWallJumpDir);
+				}
+			}
+			#endregion
+
+			#region DASH CHECKS
+			if (CanDash() && LastPressedDashTime > 0)
+			{
+				//Freeze game for split second. Adds juiciness and a bit of forgiveness over directional input
+				Sleep(Data.dashSleepTime);
+
+				//If not direction pressed, dash forward
+				if (_moveInput != Vector2.zero)
+					_lastDashDir = _moveInput;
+				else
+					_lastDashDir = IsFacingRight ? Vector2.right : Vector2.left;
+
+
+
+				IsDashing = true;
+				IsJumping = false;
 				IsWallJumping = false;
 				_isJumpCut = false;
-				_isJumpFalling = false;
-				Jump();
 
-				AnimHandler.startedJumping = true;
+				StartCoroutine(nameof(StartDash), _lastDashDir);
 			}
-			//WALL JUMP
-			else if (CanWallJump() && LastPressedJumpTime > 0)
+			if (IsDashing)
 			{
-				IsWallJumping = true;
-				IsJumping = false;
-				_isJumpCut = false;
-				_isJumpFalling = false;
-
-				_wallJumpStartTime = Time.time;
-				_lastWallJumpDir = (LastOnWallRightTime > 0) ? -1 : 1;
-
-				WallJump(_lastWallJumpDir);
-			}
-		}
-		#endregion
-
-		#region DASH CHECKS
-		if (CanDash() && LastPressedDashTime > 0)
-		{
-			//Freeze game for split second. Adds juiciness and a bit of forgiveness over directional input
-			Sleep(Data.dashSleepTime); 
-
-			//If not direction pressed, dash forward
-			if (_moveInput != Vector2.zero)
-				_lastDashDir = _moveInput;
-			else
-				_lastDashDir = IsFacingRight ? Vector2.right : Vector2.left;
-
-
-
-			IsDashing = true;
-			IsJumping = false;
-			IsWallJumping = false;
-			_isJumpCut = false;
-
-			StartCoroutine(nameof(StartDash), _lastDashDir);
-		}
-        if (IsDashing)
-        {
-            animController.SetDashing(true);
-            dashParticleSystem.Play();
-            if (Time.time >= lastSilhouetteTime + timeBetweenSilhouettes)
-            {
-                SpawnDashSilhouette();
-                EmitDashBurstParticles();
-                lastSilhouetteTime = Time.time;
-            }
-        }
-        else
-        {
-            animController.SetDashing(false);
-            dashParticleSystem.Stop();
-			StopDashBurstParticles();
-        }
-        #endregion
-
-        #region SLIDE CHECKS
-        if (CanSlide() && ((LastOnWallLeftTime > 0 && _moveInput.x < 0) || (LastOnWallRightTime > 0 && _moveInput.x > 0)))
-			IsSliding = true;
-		else
-			IsSliding = false;
-		#endregion
-
-		#region GRAVITY
-		if (!_isDashAttacking)
-		{
-			//Higher gravity if we've released the jump input or are falling
-			if (IsSliding)
-			{
-				RB.velocity = new Vector2(RB.velocity.x, -1f);
-                SetGravityScale(0);
-			}
-			else if (RB.velocity.y < 0 && _moveInput.y < 0)
-			{
-				//Much higher gravity if holding down
-				SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
-				//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFastFallSpeed));
-			}
-			else if (_isJumpCut)
-			{
-				//Higher gravity if jump button released
-				SetGravityScale(Data.gravityScale * Data.jumpCutGravityMult);
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
-			}
-			else if ((IsJumping || IsWallJumping || _isJumpFalling) && Mathf.Abs(RB.velocity.y) < Data.jumpHangTimeThreshold)
-			{
-				SetGravityScale(Data.gravityScale * Data.jumpHangGravityMult);
-			}
-			else if (RB.velocity.y < 0)
-			{
-				//Higher gravity if falling
-				SetGravityScale(Data.gravityScale * Data.fallGravityMult);
-				//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
-				RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
+				animController.SetDashing(true);
+				dashParticleSystem.Play();
+				if (Time.time >= lastSilhouetteTime + timeBetweenSilhouettes)
+				{
+					SpawnDashSilhouette();
+					EmitDashBurstParticles();
+					lastSilhouetteTime = Time.time;
+				}
 			}
 			else
 			{
-				//Default gravity if standing on a platform or moving upwards
-				SetGravityScale(Data.gravityScale);
+				animController.SetDashing(false);
+				dashParticleSystem.Stop();
+				StopDashBurstParticles();
 			}
+			#endregion
+
+			#region SLIDE CHECKS
+			if (CanSlide() && ((LastOnWallLeftTime > 0 && _moveInput.x < 0) || (LastOnWallRightTime > 0 && _moveInput.x > 0)))
+				IsSliding = true;
+			else
+				IsSliding = false;
+			#endregion
+
+			#region GRAVITY
+			if (!_isDashAttacking)
+			{
+				//Higher gravity if we've released the jump input or are falling
+				if (IsSliding)
+				{
+					RB.velocity = new Vector2(RB.velocity.x, -1f);
+					SetGravityScale(0);
+				}
+				else if (RB.velocity.y < 0 && _moveInput.y < 0)
+				{
+					//Much higher gravity if holding down
+					SetGravityScale(Data.gravityScale * Data.fastFallGravityMult);
+					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
+					RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFastFallSpeed));
+				}
+				else if (_isJumpCut)
+				{
+					//Higher gravity if jump button released
+					SetGravityScale(Data.gravityScale * Data.jumpCutGravityMult);
+					RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
+				}
+				else if ((IsJumping || IsWallJumping || _isJumpFalling) && Mathf.Abs(RB.velocity.y) < Data.jumpHangTimeThreshold)
+				{
+					SetGravityScale(Data.gravityScale * Data.jumpHangGravityMult);
+				}
+				else if (RB.velocity.y < 0)
+				{
+					//Higher gravity if falling
+					SetGravityScale(Data.gravityScale * Data.fallGravityMult);
+					//Caps maximum fall speed, so when falling over large distances we don't accelerate to insanely high speeds
+					RB.velocity = new Vector2(RB.velocity.x, Mathf.Max(RB.velocity.y, -Data.maxFallSpeed));
+				}
+				else
+				{
+					//Default gravity if standing on a platform or moving upwards
+					SetGravityScale(Data.gravityScale);
+				}
+			}
+			else
+			{
+				//No gravity when dashing (returns to normal once initial dashAttack phase over)
+				SetGravityScale(0);
+			}
+			#endregion
 		}
-		else
-		{
-			//No gravity when dashing (returns to normal once initial dashAttack phase over)
-			SetGravityScale(0);
-		}
-		#endregion
-    }
+	}
 
-    private void SpawnDashSilhouette()
-    {
-        // Instantiate the silhouette prefab at the player's position and rotation
-        Vector3 offset = new Vector3(0.5f, -0.8f, 0f);
-        GameObject silhouette = Instantiate(dashSilhouettePrefab, transform.position + offset, transform.rotation);
+	private void SpawnDashSilhouette()
+	{
+		// Instantiate the silhouette prefab at the player's position and rotation
+		Vector3 offset = new Vector3(0.5f, -0.8f, 0f);
+		GameObject silhouette = Instantiate(dashSilhouettePrefab, transform.position + offset, transform.rotation);
 
-        // Increase the size relative to the player's current scale
-        Vector3 increasedScale = transform.localScale * 1.5f; // Example: 1.5 times the player's current size
-        silhouette.transform.localScale = increasedScale;
-    }
-    private void EmitDashBurstParticles()
-    {
-        // Instantiate a new particle system for each dash
-        ParticleSystem burstParticles = Instantiate(dashBurstParticleSystem, transform.position, Quaternion.identity);
+		// Increase the size relative to the player's current scale
+		Vector3 increasedScale = transform.localScale * 1.5f; // Example: 1.5 times the player's current size
+		silhouette.transform.localScale = increasedScale;
+	}
+	private void EmitDashBurstParticles()
+	{
+		// Instantiate a new particle system for each dash
+		ParticleSystem burstParticles = Instantiate(dashBurstParticleSystem, transform.position, Quaternion.identity);
 
-        // Determine the dash direction (assuming this is 2D, adjust as needed for 3D)
-        Vector2 dashDirection = _lastDashDir.normalized;
+		// Determine the dash direction (assuming this is 2D, adjust as needed for 3D)
+		Vector2 dashDirection = _lastDashDir.normalized;
 
-        // Set the velocity over lifetime based on the normalized dash direction
-        var velocityOverLifetime = burstParticles.velocityOverLifetime;
-        velocityOverLifetime.enabled = true;
-        velocityOverLifetime.x = new ParticleSystem.MinMaxCurve(0.5f * dashDirection.x, 2f * dashDirection.x); // Adjust values as needed
-        velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(0.5f * dashDirection.y, 2f * dashDirection.y); // Adjust values as needed
+		// Set the velocity over lifetime based on the normalized dash direction
+		var velocityOverLifetime = burstParticles.velocityOverLifetime;
+		velocityOverLifetime.enabled = true;
+		velocityOverLifetime.x = new ParticleSystem.MinMaxCurve(0.5f * dashDirection.x, 2f * dashDirection.x); // Adjust values as needed
+		velocityOverLifetime.y = new ParticleSystem.MinMaxCurve(0.5f * dashDirection.y, 2f * dashDirection.y); // Adjust values as needed
 
-        // Play the particle system
-        burstParticles.Play();
+		// Play the particle system
+		burstParticles.Play();
 
-        // Destroy the particle system after its lifetime
-        Destroy(burstParticles.gameObject, burstParticles.main.duration + burstParticles.main.startLifetime.constantMax);
-    }
+		// Destroy the particle system after its lifetime
+		Destroy(burstParticles.gameObject, burstParticles.main.duration + burstParticles.main.startLifetime.constantMax);
+	}
 
 
 
 
-    private void StopDashBurstParticles()
-    {
-        // Stop the particle system
-        dashBurstParticleSystem.Stop();
-    }
+	private void StopDashBurstParticles()
+	{
+		// Stop the particle system
+		dashBurstParticleSystem.Stop();
+	}
 
 
 
-    private void FixedUpdate()
+	private void FixedUpdate()
 	{
 		//Handle Run
 		if (!IsDashing)
@@ -366,11 +368,11 @@ public class PlayerMovement : MonoBehaviour
 		//Handle Slide
 		if (IsSliding)
 			Slide();
-    }
+	}
 
-    #region INPUT CALLBACKS
+	#region INPUT CALLBACKS
 	//Methods which whandle input detected in Update()
-    public void OnJumpInput()
+	public void OnJumpInput()
 	{
 		LastPressedJumpTime = Data.jumpInputBufferTime;
 	}
@@ -385,33 +387,33 @@ public class PlayerMovement : MonoBehaviour
 	{
 		LastPressedDashTime = Data.dashInputBufferTime;
 	}
-    #endregion
+	#endregion
 
-    #region GENERAL METHODS
-    public void SetGravityScale(float scale)
+	#region GENERAL METHODS
+	public void SetGravityScale(float scale)
 	{
 		RB.gravityScale = scale;
 	}
 
 	private void Sleep(float duration)
-    {
+	{
 		//Method used so we don't need to call StartCoroutine everywhere
 		//nameof() notation means we don't need to input a string directly.
 		//Removes chance of spelling mistakes and will improve error messages if any
 		StartCoroutine(nameof(PerformSleep), duration);
-    }
+	}
 
 	private IEnumerator PerformSleep(float duration)
-    {
+	{
 		Time.timeScale = 0;
 		yield return new WaitForSecondsRealtime(duration); //Must be Realtime since timeScale with be 0 
 		Time.timeScale = 1;
 	}
-    #endregion
+	#endregion
 
 	//MOVEMENT METHODS
-    #region RUN METHODS
-    private void Run(float lerpAmount)
+	#region RUN METHODS
+	private void Run(float lerpAmount)
 	{
 		//Calculate the direction we want to move in and our desired velocity
 		float targetSpeed = _moveInput.x * Data.runMaxSpeed;
@@ -440,11 +442,11 @@ public class PlayerMovement : MonoBehaviour
 
 		#region Conserve Momentum
 		//We won't slow the player down if they are moving in their desired direction but at a greater speed than their maxSpeed
-		if(Data.doConserveMomentum && Mathf.Abs(RB.velocity.x) > Mathf.Abs(targetSpeed) && Mathf.Sign(RB.velocity.x) == Mathf.Sign(targetSpeed) && Mathf.Abs(targetSpeed) > 0.01f && LastOnGroundTime < 0)
+		if (Data.doConserveMomentum && Mathf.Abs(RB.velocity.x) > Mathf.Abs(targetSpeed) && Mathf.Sign(RB.velocity.x) == Mathf.Sign(targetSpeed) && Mathf.Abs(targetSpeed) > 0.01f && LastOnGroundTime < 0)
 		{
 			//Prevent any deceleration from happening, or in other words conserve are current momentum
 			//You could experiment with allowing for the player to slightly increae their speed whilst in this "state"
-			accelRate = 0; 
+			accelRate = 0;
 		}
 		#endregion
 
@@ -467,16 +469,16 @@ public class PlayerMovement : MonoBehaviour
 	private void Turn()
 	{
 		//stores scale and flips the player along the x axis, 
-		Vector3 scale = transform.localScale; 
+		Vector3 scale = transform.localScale;
 		scale.x *= -1;
 		transform.localScale = scale;
 
 		IsFacingRight = !IsFacingRight;
 	}
-    #endregion
+	#endregion
 
-    #region JUMP METHODS
-    private void Jump()
+	#region JUMP METHODS
+	private void Jump()
 	{
 		//Ensures we can't call Jump multiple times from one press
 		LastPressedJumpTime = 0;
@@ -517,17 +519,17 @@ public class PlayerMovement : MonoBehaviour
 		RB.AddForce(force, ForceMode2D.Impulse);
 		#endregion
 	}
-    #endregion
-    private CameraShakeTrigger _cameraShakeTrigger;
-    #region DASH METHODS
-    //Dash Coroutine
-    private IEnumerator StartDash(Vector2 dir)
+	#endregion
+	private CameraShakeTrigger _cameraShakeTrigger;
+	#region DASH METHODS
+	//Dash Coroutine
+	private IEnumerator StartDash(Vector2 dir)
 	{
-        //Overall this method of dashing aims to mimic Celeste, if you're looking for
-        // a more physics-based approach try a method similar to that used in the jump
-        _cameraShakeTrigger = GetComponent<CameraShakeTrigger>();
-        _cameraShakeTrigger.TriggerShake(dir.normalized);
-        LastOnGroundTime = 0;
+		//Overall this method of dashing aims to mimic Celeste, if you're looking for
+		// a more physics-based approach try a method similar to that used in the jump
+		_cameraShakeTrigger = GetComponent<CameraShakeTrigger>();
+		_cameraShakeTrigger.TriggerShake(dir.normalized);
+		LastOnGroundTime = 0;
 		LastPressedDashTime = 0;
 
 		float startTime = Time.time;
@@ -578,46 +580,46 @@ public class PlayerMovement : MonoBehaviour
 	private void Slide()
 	{
 		//We remove the remaining upwards Impulse to prevent upwards sliding
-		if(RB.velocity.y > 0)
+		if (RB.velocity.y > 0)
 		{
-		    RB.AddForce(-RB.velocity.y * Vector2.up,ForceMode2D.Impulse);
+			RB.AddForce(-RB.velocity.y * Vector2.up, ForceMode2D.Impulse);
 		}
-	
+
 		//Works the same as the Run but only in the y-axis
 		//THis seems to work fine, buit maybe you'll find a better way to implement a slide into this system
-		float speedDif = Data.slideSpeed - RB.velocity.y;	
+		float speedDif = Data.slideSpeed - RB.velocity.y;
 		float movement = speedDif * Data.slideAccel;
 		//So, we clamp the movement here to prevent any over corrections (these aren't noticeable in the Run)
 		//The force applied can't be greater than the (negative) speedDifference * by how many times a second FixedUpdate() is called. For more info research how force are applied to rigidbodies.
-		movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif)  * (1 / Time.fixedDeltaTime), Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
+		movement = Mathf.Clamp(movement, -Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime), Mathf.Abs(speedDif) * (1 / Time.fixedDeltaTime));
 
 		RB.AddForce(movement * Vector2.up);
 	}
-    #endregion
+	#endregion
 
 
-    #region CHECK METHODS
-    public void CheckDirectionToFace(bool isMovingRight)
+	#region CHECK METHODS
+	public void CheckDirectionToFace(bool isMovingRight)
 	{
 		if (isMovingRight != IsFacingRight)
 			Turn();
 	}
 
-    private bool CanJump()
-    {
+	private bool CanJump()
+	{
 		return LastOnGroundTime > 0 && !IsJumping;
-    }
+	}
 
 	private bool CanWallJump()
-    {
+	{
 		return LastPressedJumpTime > 0 && LastOnWallTime > 0 && LastOnGroundTime <= 0 && (!IsWallJumping ||
 			 (LastOnWallRightTime > 0 && _lastWallJumpDir == 1) || (LastOnWallLeftTime > 0 && _lastWallJumpDir == -1));
 	}
 
 	private bool CanJumpCut()
-    {
+	{
 		return IsJumping && RB.velocity.y > 0;
-    }
+	}
 
 	private bool CanWallJumpCut()
 	{
@@ -635,25 +637,25 @@ public class PlayerMovement : MonoBehaviour
 	}
 
 	public bool CanSlide()
-    {
+	{
 		if (LastOnWallTime > 0 && !IsJumping && !IsWallJumping && !IsDashing && LastOnGroundTime <= 0)
 			return true;
 		else
 			return false;
 	}
-    #endregion
+	#endregion
 
 
-    #region EDITOR METHODS
-    private void OnDrawGizmosSelected()
-    {
+	#region EDITOR METHODS
+	private void OnDrawGizmosSelected()
+	{
 		Gizmos.color = Color.green;
 		Gizmos.DrawWireCube(_groundCheckPoint.position, _groundCheckSize);
 		Gizmos.color = Color.blue;
 		Gizmos.DrawWireCube(_frontWallCheckPoint.position, _wallCheckSize);
 		Gizmos.DrawWireCube(_backWallCheckPoint.position, _wallCheckSize);
 	}
-    #endregion
+	#endregion
 }
 
 // created by Dawnosaur :D

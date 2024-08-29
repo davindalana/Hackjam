@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SearchService;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PauseMenu : MonoBehaviour
 {
     public GameObject PausePanel;
-    public bool isPaused;
+    public static bool isPaused;
 
     void Start()
     {
@@ -13,9 +15,9 @@ public class PauseMenu : MonoBehaviour
     }
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if(isPaused)
+            if (isPaused)
             {
                 Continue();
             }
@@ -30,10 +32,23 @@ public class PauseMenu : MonoBehaviour
     {
         PausePanel.SetActive(true);
         Time.timeScale = 0;
+        isPaused = true;
     }
     public void Continue()
     {
         PausePanel.SetActive(false);
         Time.timeScale = 1;
+        isPaused = false;
+    }
+    public void Restart()
+    {
+        Time.timeScale = 1;
+        isPaused = false;
+        SceneManager.LoadScene("Demo");
+    }
+
+    public void Exit()
+    {
+        Application.Quit();
     }
 }
