@@ -5,13 +5,16 @@ using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
-    public void PlayGame()
+    Vector3 newgame = new Vector3(-15.29543f, -1.467768f, 0.06722727f);
+
+    public void NewGame()
     {
+        GameManager.SaveGame(newgame);
         SceneManager.LoadScene("Demo");
     }
     public void LoadGame()
     {
-
+        SceneManager.LoadScene("Demo");
     }
     public void Exit()
     {

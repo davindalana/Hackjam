@@ -9,9 +9,9 @@ public class PlayerRespawn : MonoBehaviour
     public GameObject deathParticlePrefab; // Reference to the death particle prefab
     public Transform playerTransform; // Reference to the player transform
     public Camera mainCamera; // Reference to the main camera
-    public float zoomDuration = 1.0f; // Duration of the zoom effect
-    public Vector3 zoomScale = new Vector3(0.1f, 0.1f, 1f); // Final scale for zoom in (small circle)
-    public Vector3 originalScale = new Vector3(400f, 400f, 1f); // Starting scale of the Sprite Mask
+    [SerializeField] private float zoomDuration = 1.0f; // Duration of the zoom effect
+    [SerializeField] private Vector3 zoomScale = new Vector3(0.1f, 0.1f, 1f); // Final scale for zoom in (small circle)
+    [SerializeField] private Vector3 originalScale = new Vector3(400f, 400f, 1f); // Starting scale of the Sprite Mask
     public GameObject blackOverlay;
     public Animator playerAnimator; // Reference to the Animator component
     public CameraShakeTrigger cameraShakeTrigger; // Reference to the CameraShakeTrigger component
@@ -22,13 +22,15 @@ public class PlayerRespawn : MonoBehaviour
     private Transform lastCheckpoint; // Reference to the last touched checkpoint
 
     [SerializeField]
-    private Vector3 lastCheckpointPosition;
+    private static Vector3 lastCheckpointPosition;
     private void Start()
     {
         playerMovement = GetComponent<PlayerMovement>();
         // Assuming originalScale is already set to the initial scale of the Sprite Mask
         circleMask.transform.localScale = originalScale;
         blackOverlay.SetActive(false);
+
+        GameManager.LoadGame(playerTransform);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -49,6 +51,7 @@ public class PlayerRespawn : MonoBehaviour
                 lastCheckpoint = other.transform;
                 lastCheckpointPosition = lastCheckpoint.position;
             }
+            GameManager.SaveGame(lastCheckpoint.position);
         }
     }
 
@@ -149,4 +152,6 @@ public class PlayerRespawn : MonoBehaviour
         }
         playerAnimator.SetBool("Dead", false); // Reset the Dead trigger to return to normal animations
     }
+
+
 }
