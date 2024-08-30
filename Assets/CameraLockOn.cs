@@ -6,6 +6,7 @@ using UnityEngine;
 public class CameraLockOn : MonoBehaviour
 {
     private CinemachineVirtualCamera _virtualCamera;
+    private CinemachineFramingTransposer _framingTransposer;
     public Transform playerTransform; // Reference to the player's transform
     public float defaultOrthographicSize = 6f; // Default orthographic size
     public float smoothTime = 0.5f; // The time it takes to reach the target size
@@ -54,6 +55,16 @@ public class CameraLockOn : MonoBehaviour
             if (!customSizeApplied)
             {
                 targetOrthographicSize = defaultOrthographicSize;
+            }
+
+            _framingTransposer = _virtualCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
+            if (closestLock.name.Equals("cam13"))
+            {
+                _framingTransposer.m_LookaheadTime = 0.2f;
+            }
+            else
+            {
+                _framingTransposer.m_LookaheadTime = 0f;
             }
         }
         else

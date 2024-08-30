@@ -89,14 +89,12 @@ public class DashOrb : MonoBehaviour
         if (orbParticles != null)
         {
             orbParticles.Play();
-            yield return StartCoroutine(PlayBounceEffect());
             var emission = orbParticles.emission;
             var mainModule = orbParticles.main;
             mainModule.startSpeed = new ParticleSystem.MinMaxCurve(3, 3);
-            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 30) }); // Adjust the count for a larger burst
-            yield return new WaitForSeconds(0.1f);
-            emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, 0) });
+            orbParticles.Emit(100); // Adjust the count for a larger burst
             mainModule.startSpeed = new ParticleSystem.MinMaxCurve(1, 2);
+            yield return StartCoroutine(PlayBounceEffect());
         }
     }
     private IEnumerator PlayBounceEffect()

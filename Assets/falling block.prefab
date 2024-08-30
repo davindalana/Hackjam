@@ -177,6 +177,7 @@ MonoBehaviour:
   destroyOnFall: 0
   shakeDuration: 0.5
   shakeMagnitude: 0.05
+  specificCollider: {fileID: 6365349423808296354}
 --- !u!58 &6365349423808296354
 CircleCollider2D:
   m_ObjectHideFlags: 0
